@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Scouting PH — Shop</title>
+<style>
+  :root{
+    --bg:#f9f9fb; 
+    --card:#fff; 
+    --accent:#6a0dad; /* Purple */
+    --muted:#666;
+    --radius:10px; 
+    --gap:18px; 
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  }
+  body{margin:0;background:var(--bg);color:#111}
+  header{
+    background:var(--card);
+    color:var(--accent);
+    padding:16px 24px;
+    display:flex;
+    gap:16px;
+    align-items:center;
+    flex-wrap:wrap;
+    border-bottom:3px solid var(--accent);
+  }
+  .brand{font-weight:700;font-size:20px}
+  .tagline{opacity:.8;font-size:13px;color:var(--muted)}
+  .controls{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .search{background:#f1f1f7;border:1px solid #ddd;padding:8px 12px;border-radius:8px}
+  .btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;border:0;font-weight:600;cursor:pointer}
+  main{padding:24px;max-width:1200px;margin:0 auto}
+  .hero{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+  .hero .title{font-size:28px;font-weight:700;color:var(--accent)}
+  .hero .desc{color:var(--muted);margin-top:6px}
+  .filters{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap}
+  .chip{background:var(--card);padding:8px 12px;border-radius:999px;box-shadow:0 1px 2px rgba(0,0,0,.06);cursor:pointer;border:1px solid transparent}
+  .chip.active{border-color:var(--accent);color:var(--accent);font-weight:700}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--gap)}
+  .card{background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:0 6px 18px rgba(10,10,10,.04);display:flex;flex-direction:column}
+  .card img{width:100%;height:180px;object-fit:cover;display:block}
+  .card .info{padding:12px;flex:1;display:flex;flex-direction:column}
+  .card h4{margin:0;font-size:15px;color:var(--accent)}
+  .price{margin-top:8px;font-weight:700;color:var(--accent)}
+  .card .actions{display:flex;gap:8px;margin-top:12px}
+  .small{padding:7px 10px;border-radius:8px;border:1px solid var(--accent);background:#f9f9fb;cursor:pointer;color:var(--accent)}
+  footer{padding:18px 24px;text-align:center;color:var(--muted);font-size:13px;margin-top:28px;border-top:2px solid #eee}
+  /* modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(10,10,10,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:60}
+  .modal{background:var(--card);border-radius:12px;max-width:900px;width:100%;display:flex;gap:18px;overflow:hidden}
+  .modal .left{flex:1;min-width:260px}
+  .modal img{width:100%;height:420px;object-fit:cover;display:block}
+  .modal .right{flex:1;padding:18px}
+  .qty{display:flex;align-items:center;gap:8px;margin-top:12px}
+  .qty button{width:36px;height:36px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer}
+  .cart-panel{position:fixed;right:20px;bottom:20px;background:var(--card);border-radius:12px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.12);min-width:300px;z-index:70;display:none}
+  .cart-item{display:flex;gap:12px;align-items:center;border-bottom:1px dashed #eee;padding:8px 0}
+  .cart-empty{color:var(--muted);padding:12px 0;text-align:center}
+  /* responsive */
+  @media (max-width:640px){
+    .modal{flex-direction:column}
+    .modal img{height:260px}
+    header{padding:14px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <!-- Replace logo.png with your own logo file -->
+  <img src="logo.png" alt="Scouting PH Logo" style="height:50px;border-radius:8px">
+  <div>
+    <div class="brand">Scouting PH Shop</div>
+    <div class="tagline">Support Scouting projects • Official gear</div>
+  </div>
+
+  <div class="controls">
+    <input id="search" class="search" placeholder="Search products..." />
+    <button id="cartBtn" class="btn">Cart (0)</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div>
+      <div class="title">Official Scouting PH Shop</div>
+      <div class="desc">All proceeds support Scouting activities and community projects.</div>
+    </div>
+  </section>
+
+  <div class="filters" id="categoryFilters"></div>
+  <section class="grid" id="productGrid"></section>
+</main>
+
+<!-- Modal -->
+<div id="modalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="left">
+      <img id="modalImage" src="" alt="Product image">
+    </div>
+    <div class="right">
+      <h3 id="modalTitle">Product</h3>
+      <div id="modalDesc" style="color:var(--muted);margin-top:8px"></div>
+      <div class="price" id="modalPrice">₱0.00</div>
+
+      <div class="qty">
+        <label>Quantity</label>
+        <button id="decQty">−</button>
+        <div id="qtyVal">1</div>
+        <button id="incQty">+</button>
+      </div>
+
+      <div style="margin-top:16px">
+        <button id="addToCartBtn" class="btn">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cart -->
+<div id="cartPanel" class="cart-panel">
+  <h4 style="color:var(--accent)">🛒 Your Cart</h4>
+  <div id="cartItems"></div>
+  <div style="margin-top:12px;font-weight:bold">Total: ₱<span id="cartTotal">0</span></div>
+</div>
+
+<footer>© 2025 Scouting PH — All Rights Reserved</footer>
+
+<script>
+// ==== Product Data ====
+const products = [
+  {id:1,name:"Official Scout Neckerchief",price:250,category:"Uniform",image:"https://via.placeholder.com/400x300/6a0dad/ffffff?text=Neckerchief",desc:"High-quality official neckerchief for Scouts."},
+  {id:2,name:"Scouting PH Patch",price:120,category:"Accessories",image:"https://via.placeholder.com/400x300/6a0dad/ffffff?text=Patch",desc:"Embroidered Scouting PH patch."},
+  {id:3,name:"Woggle",price:90,category:"Accessories",image:"https://via.placeholder.com/400x300/6a0dad/ffffff?text=Woggle",desc:"Classic Scout woggle."},
+  {id:4,name:"Scout T-Shirt",price:350,category:"Uniform",image:"https://via.placeholder.com/400x300/6a0dad/ffffff?text=T-Shirt",desc:"Comfortable cotton Scouting PH shirt."},
+  {id:5,name:"Scout Backpack",price:1200,category:"Gear",image:"https://via.placeholder.com/400x300/6a0dad/ffffff?text=Backpack",desc:"Durable backpack for camping and activities."}
+];
+
+// ==== State ====
+let cart = JSON.parse(localStorage.getItem("scoutCart")||"[]");
+let currentProduct = null;
+let qty = 1;
+let activeCategory = "All";
+
+// ==== Elements ====
+const productGrid=document.getElementById("productGrid");
+const categoryFilters=document.getElementById("categoryFilters");
+const search=document.getElementById("search");
+const modalBackdrop=document.getElementById("modalBackdrop");
+const modalTitle=document.getElementById("modalTitle");
+const modalDesc=document.getElementById("modalDesc");
+const modalImage=document.getElementById("modalImage");
+const modalPrice=document.getElementById("modalPrice");
+const qtyVal=document.getElementById("qtyVal");
+const addToCartBtn=document.getElementById("addToCartBtn");
+const cartBtn=document.getElementById("cartBtn");
+const cartPanel=document.getElementById("cartPanel");
+const cartItems=document.getElementById("cartItems");
+const cartTotal=document.getElementById("cartTotal");
+
+// ==== Functions ====
+function renderProducts(){
+  productGrid.innerHTML="";
+  const q=search.value.toLowerCase();
+  products
+    .filter(p=> (activeCategory==="All"||p.category===activeCategory) && p.name.toLowerCase().includes(q))
+    .forEach(p=>{
+      const card=document.createElement("div");
+      card.className="card";
+      card.innerHTML=`
+        <img src="${p.image}" alt="${p.name}">
+        <div class="info">
+          <h4>${p.name}</h4>
+          <div class="price">₱${p.price}</div>
+          <div class="actions">
+            <button class="small" onclick="openModal(${p.id})">View</button>
+            <button class="small" onclick="addToCart(${p.id},1)">Add</button>
+          </div>
+        </div>`;
+      productGrid.appendChild(card);
+    });
+}
+
+function renderCategories(){
+  const cats=["All",...new Set(products.map(p=>p.category))];
+  categoryFilters.innerHTML="";
+  cats.forEach(c=>{
+    const chip=document.createElement("div");
+    chip.className="chip"+(c===activeCategory?" active":"");
+    chip.textContent=c;
+    chip.onclick=()=>{activeCategory=c;renderCategories();renderProducts();}
+    categoryFilters.appendChild(chip);
+  });
+}
+
+function openModal(id){
+  currentProduct=products.find(p=>p.id===id);
+  qty=1;
+  qtyVal.textContent=qty;
+  modalTitle.textContent=currentProduct.name;
+  modalDesc.textContent=currentProduct.desc;
+  modalImage.src=currentProduct.image;
+  modalPrice.textContent="₱"+currentProduct.price;
+  modalBackdrop.style.display="flex";
+}
+modalBackdrop.onclick=e=>{if(e.target===modalBackdrop)modalBackdrop.style.display="none";}
+
+document.getElementById("incQty").onclick=()=>{qty++;qtyVal.textContent=qty;}
+document.getElementById("decQty").onclick=()=>{if(qty>1){qty--;qtyVal.textContent=qty;}}
+
+addToCartBtn.onclick=()=>{addToCart(currentProduct.id,qty);modalBackdrop.style.display="none";};
+
+function addToCart(id,amount){
+  const item=cart.find(i=>i.id===id);
+  if(item)item.qty+=amount;else cart.push({id,qty:amount});
+  saveCart();
+}
+
+function saveCart(){
+  localStorage.setItem("scoutCart",JSON.stringify(cart));
+  renderCart();
+}
+
+function renderCart(){
+  cartItems.innerHTML="";
+  if(cart.length===0){cartItems.innerHTML='<div class="cart-empty">Cart is empty</div>';}
+  let total=0;
+  cart.forEach(ci=>{
+    const p=products.find(p=>p.id===ci.id);
+    total+=p.price*ci.qty;
+    const div=document.createElement("div");
+    div.className="cart-item";
+    div.innerHTML=`
+      <img src="${p.image}" style="width:50px;height:50px;object-fit:cover">
+      <div style="flex:1">
+        ${p.name}<br>
+        ₱${p.price} × ${ci.qty}
+      </div>
+      <button class="small" onclick="removeFromCart(${ci.id})">✕</button>`;
+    cartItems.appendChild(div);
+  });
+  cartTotal.textContent=total;
+  cartBtn.textContent=`Cart (${cart.length})`;
+}
+
+function removeFromCart(id){
+  cart=cart.filter(i=>i.id!==id);
+  saveCart();
+}
+
+// ==== Events ====
+search.oninput=()=>renderProducts();
+cartBtn.onclick=()=>{cartPanel.style.display=cartPanel.style.display==="none"?"block":"none";}
+
+// ==== Init ====
+renderCategories();
+renderProducts();
+renderCart();
+</script>
+</body>
+</html>
